@@ -38,17 +38,18 @@ class Task
   end
 
   def build
-    verbose {puts "  --> #{@cmd}"}
+    _verbose { puts "  --> #{@cmd}" }
     output = `#{@cmd}`
     print output
   end
 
-private
-  def verbose
+  private
+
+  def _verbose
     if @verbose.nil?
       # nil run first
       @verbose = true
-      if @cmd.start_with?("@")
+      if @cmd.start_with?('@')
         @verbose = false
         @cmd[0] = ''
       end
@@ -110,8 +111,7 @@ class Target
   end
 end
 
-class Token < Struct.new(:type, :data)
-end
+Token = Struct.new(:type, :data)
 
 class Lexer
   DEPENDENCY = 1
@@ -149,8 +149,6 @@ class RMake
 
   def initialize(env, rmakefile, target_name)
     @env = env
-    @rmakefile = rmakefile
-
     @parser = Lexer.new(env, rmakefile)
 
     @target_name = target_name
@@ -182,12 +180,6 @@ class RMake
 
   private
 
-  def _get_target
-    return @target if @target
-
-    @first_target
-  end
-
   def _parse
     current_target = nil
     first_target = nil
@@ -198,17 +190,15 @@ class RMake
       token = @parser.next
       case token.type
       when Lexer::DEPENDENCY
+        # "clean:" => ["clean"]
         # "total: 1.o 2.c 2.h 1.h" => ["total", "1.o 2.c 2.h 1.h"]
         # TODO: check end_with? ':'
         rules = token.data.split(':').map(&:strip)
         target_name = rules[0]
         first_target ||= target_name
         current_target = target_name
-        # clean: => ["clean"]
         target_deps = [] # default for clean: just no deps
-        unless rules.length == 1
-          target_deps = rules[1].split.map(&:strip)
-        end
+        target_deps = rules[1].split.map(&:strip) unless rules.length == 1
 
         (all_deps[current_target] ||= []).concat(target_deps)
       when Lexer::TASK
@@ -243,6 +233,7 @@ def main
   puts '----- list targets -----'
   puts rmake.list_targets
   puts '================================='
+
   rmake.run
 end
 
