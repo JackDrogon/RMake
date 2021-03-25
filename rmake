@@ -110,12 +110,48 @@ class Target
   end
 end
 
+class Token < Struct.new(:type, :data)
+end
+
+class Lexer
+  DEPENDENCY = 1
+  TASK = 2
+  EOF = 3
+
+  def initialize(env, rmakefile)
+    @env = env
+    @rmakefile = rmakefile
+    @data = nil # buffer with lines
+  end
+
+  # nil is empty
+  def next
+    @data = File.readlines(@rmakefile) if @data.nil?
+
+    line = @data.shift&.rstrip!
+    if line.nil?
+      Token.new(EOF, nil)
+    elsif line.empty?
+      self.next
+    elsif line.start_with?("\t")
+      # TASK
+      line.lstrip!
+      Token.new(TASK, line)
+    else
+      # DEPENDENCY
+      Token.new(DEPENDENCY, line)
+    end
+  end
+end
+
 class RMake
   include EnvHelper
 
   def initialize(env, rmakefile, target_name)
     @env = env
     @rmakefile = rmakefile
+
+    @parser = Lexer.new(env, rmakefile)
 
     @target_name = target_name
     @target_map = {}
@@ -158,34 +194,32 @@ class RMake
     all_deps = {}
     tasks = {}
 
-    lines = File.readlines(@rmakefile)
-    lines.each do |line|
-      rule = line.strip.split(':').map(&:strip)
-      case rule.length
-      when 0
-        # [], empty line
-        # break
-      when 1
-        # ["gcc 1.o 2.c -o total"]
+    loop do
+      token = @parser.next
+      case token.type
+      when Lexer::DEPENDENCY
+        # "total: 1.o 2.c 2.h 1.h" => ["total", "1.o 2.c 2.h 1.h"]
+        # TODO: check end_with? ':'
+        rules = token.data.split(':').map(&:strip)
+        target_name = rules[0]
+        first_target ||= target_name
+        current_target = target_name
         # clean: => ["clean"]
-        if line.strip.end_with?(':')
-          current_target = rule[0]
-          all_deps[current_target] ||= []
-          next
+        target_deps = [] # default for clean: just no deps
+        unless rules.length == 1
+          target_deps = rules[1].split.map(&:strip)
         end
 
+        (all_deps[current_target] ||= []).concat(target_deps)
+      when Lexer::TASK
+        # ["gcc 1.o 2.c -o total"]
         unless current_target
           puts 'found rule before target'
           exit(1)
         end
-        (tasks[current_target] ||= []) << rule[0]
-      when 2
-        # ["total", "1.o 2.c 2.h 1.h"]
-        target_name = rule[0]
-        target_deps = rule[1].split.map(&:strip)
-        first_target ||= target_name
-        current_target = target_name
-        (all_deps[current_target] ||= []).concat(target_deps)
+        (tasks[current_target] ||= []) << token.data
+      when Lexer::EOF
+        break
       end
     end
 
