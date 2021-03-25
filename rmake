@@ -12,20 +12,31 @@ module EnvHelper
 end
 
 class Env
-  def initialize(child)
+  def initialize(table = {}, child = nil)
+    raise 'table is not Hash' if @table.is_a?(Hash)
+
+    @table = table
+
+    raise 'Child is not nil or Env' if !child.nil? && !child.is_a?(Env)
+
     @child = child
-    @table = {}
+  end
+
+  def include?(key)
+    @table.include?(key) || @child&.include?(key)
   end
 
   def [](key)
-    @table[key] || @child[key]
+    @table[key] || @child&.[](key)
   end
 
   def []=(key, value)
-    if @table[key]
+    if @table.include?(key)
       @table[key] = value
-    else
+    elsif @child&.include?(key)
       @child[key] = value
+    else
+      @table[key] = value
     end
   end
 end
@@ -228,7 +239,7 @@ def main
   target_name = nil
   target_name = ARGV[0] unless ARGV.empty?
 
-  rmake = RMake.new(Env.new(ENV.to_hash), RMAKEFILE, target_name)
+  rmake = RMake.new(Env.new(ENV.to_h), RMAKEFILE, target_name)
   puts '================================='
   puts '----- list targets -----'
   puts rmake.list_targets
