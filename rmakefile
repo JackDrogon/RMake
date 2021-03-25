@@ -1,0 +1,5 @@
+lint:
+	rubocop -A rmake
+
+push:
+	git push -u origin master
