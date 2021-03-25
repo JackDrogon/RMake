@@ -50,8 +50,7 @@ class Task
 
   def build
     _verbose { puts "  --> #{@cmd}" }
-    output = `#{@cmd}`
-    print output
+    system @cmd
   end
 
   private
