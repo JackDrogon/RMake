@@ -194,7 +194,7 @@ class RMake
 
   def build
     target = @target_map[@target_name]
-    target.build
+    target&.build
   end
 
   def list_targets
