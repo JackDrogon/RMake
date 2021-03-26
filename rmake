@@ -4,10 +4,22 @@
 RMAKEFILE = 'rmakefile'
 
 module EnvHelper
-  def verbose
-    if @env['VERBOSE']
+  def v
+    if _verbose >= 1
       yield if block_given?
     end
+  end
+
+  def vv
+    if _verbose >= 2
+      yield if block_given?
+    end
+  end
+
+  private
+
+  def _verbose
+    @env.fetch('VERBOSE', 0).to_i
   end
 end
 
@@ -24,6 +36,14 @@ class Env
 
   def include?(key)
     @table.include?(key) || @child&.include?(key)
+  end
+
+  def fetch(key, default_value)
+    if include?(key)
+      self[key]
+    else
+      default_value
+    end
   end
 
   def [](key)
@@ -45,33 +65,35 @@ class Task
   def initialize(env, cmd)
     @env = env
     @cmd = cmd
-    @verbose = nil
+    @echo = nil
   end
 
   def build
-    _verbose { puts "  --> #{@cmd}" }
+    _echo { puts "  --> #{@cmd}" }
     system @cmd
   end
 
   private
 
-  def _verbose
-    if @verbose.nil?
+  def _echo
+    if @echo.nil?
       # nil run first
-      @verbose = true
+      @echo = true
       if @cmd.start_with?('@')
-        @verbose = false
+        @echo = false
         @cmd[0] = ''
       end
     end
 
-    if @verbose
+    if @echo
       yield if block_given?
     end
   end
 end
 
 class Target
+  include EnvHelper
+
   attr_reader :name, :deps
 
   def initialize(env, name, deps, cmds, target_map)
@@ -90,6 +112,8 @@ class Target
 
   def build
     return unless rebuild?
+
+    v { puts "Building target #{@name}" }
 
     @deps.each do |dep|
       target = @target_map[dep]
@@ -184,7 +208,7 @@ class RMake
       exit(1)
     end
 
-    verbose { puts '-------------------------' }
+    v { puts '-------------------------' }
     build
   end
 
@@ -227,10 +251,10 @@ class RMake
     @targets = all_deps.map { |name, deps| Target.new(@env, name, deps, tasks[name], @target_map) }
     @targets.each { |t| @target_map[t.name] = t }
 
-    verbose { pp @target_name }
-    verbose { pp all_deps }
-    verbose { pp tasks }
-    verbose { pp @targets }
+    vv { pp @target_name }
+    vv { pp all_deps }
+    vv { pp tasks }
+    vv { pp @targets }
   end
 end
 
