@@ -26,9 +26,11 @@ end
 class Env
   def initialize(table = {}, child = nil)
     raise 'table is not Hash' if @table.is_a?(Hash)
+
     @table = table
 
     raise 'Child is not nil or Env' if !child.nil? && !child.is_a?(Env)
+
     @child = child
   end
 
@@ -170,7 +172,7 @@ class Lexer
       # TASK
       line.lstrip!
       Token.new(TASK, line)
-    elsif line.include?("=")
+    elsif line.include?('=')
       Token.new(ASSIGNMENT, line)
     else
       # DEPENDENCY
@@ -188,7 +190,6 @@ class RMake
 
     @target_name = target_name
     @target_map = {}
-    @targets = []
 
     _parse
   end
@@ -245,7 +246,7 @@ class RMake
         (tasks[current_target] ||= []) << token.data
       when Lexer::ASSIGNMENT
         # TODO: check error, such as "a="
-        var_name, var_val = token.data.split("=").map(&:strip)
+        var_name, var_val = token.data.split('=').map(&:strip)
         @env[var_name] = var_val
         vv { puts "assign #{var_name} = #{var_val}" }
       when Lexer::EOF
@@ -254,13 +255,14 @@ class RMake
     end
 
     @target_name ||= first_target
-    @targets = all_deps.map { |name, deps| Target.new(@env, name, deps, tasks[name], @target_map) }
-    @targets.each { |t| @target_map[t.name] = t }
+    all_deps.each do |name, deps|
+      target = Target.new(@env, name, deps, tasks[name], @target_map)
+      @target_map[name] = target
+    end
 
     vv { pp @target_name }
     vv { pp all_deps }
     vv { pp tasks }
-    vv { pp @targets }
   end
 end
 
