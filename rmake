@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 RMAKEFILE = 'rmakefile'
+ENV_INDENT = '_indent_'
 
 module EnvHelper
   def v
@@ -16,6 +17,18 @@ module EnvHelper
     end
   end
 
+  def indent_space
+    '  ' * @env[ENV_INDENT]
+  end
+
+  def incr_indent
+    @env[ENV_INDENT] += 1
+  end
+
+  def decr_indent
+    @env[ENV_INDENT] -= 1
+  end
+
   private
 
   def _verbose
@@ -24,18 +37,18 @@ module EnvHelper
 end
 
 class Env
-  def initialize(table = {}, child = nil)
+  def initialize(table = {}, parent = nil)
     raise 'table is not Hash' if @table.is_a?(Hash)
 
     @table = table
 
-    raise 'Child is not nil or Env' if !child.nil? && !child.is_a?(Env)
+    raise 'parent is not nil or Env' if !parent.nil? && !parent.is_a?(Env)
 
-    @child = child
+    @parent = parent
   end
 
   def include?(key)
-    @table.include?(key) || @child&.include?(key)
+    @table.include?(key) || @parent&.include?(key)
   end
 
   def fetch(key, default_value)
@@ -46,15 +59,20 @@ class Env
     end
   end
 
+  def delete(key)
+    @table.delete(key)
+    @parent&.delete(key)
+  end
+
   def [](key)
-    @table[key] || @child&.[](key)
+    @table[key] || @parent&.[](key)
   end
 
   def []=(key, value)
     if @table.include?(key)
       @table[key] = value
-    elsif @child&.include?(key)
-      @child[key] = value
+    elsif @parent&.include?(key)
+      @parent[key] = value
     else
       @table[key] = value
     end
@@ -62,6 +80,8 @@ class Env
 end
 
 class Task
+  include EnvHelper
+
   def initialize(env, cmd)
     @env = env
     @cmd = cmd
@@ -69,7 +89,7 @@ class Task
   end
 
   def build
-    _echo { puts "  --> #{@cmd}" }
+    _echo { puts "#{indent_space} --> #{@cmd}" }
     system @cmd
   end
 
@@ -113,12 +133,9 @@ class Target
   def build
     return unless rebuild?
 
-    v { puts "Building target #{@name}" }
+    v { puts "#{indent_space}Building target #{@name}" }
 
-    @deps.each do |dep|
-      target = @target_map[dep]
-      target&.build
-    end
+    _build_deps
     @tasks.each(&:build)
     @need_rebuild = false
   end
@@ -142,6 +159,15 @@ class Target
         File.mtime(@name) < File.mtime(target.name)
       end
     end
+  end
+
+  def _build_deps
+    incr_indent
+    @deps.each do |dep|
+      target = @target_map[dep]
+      target&.build
+    end
+    decr_indent
   end
 end
 
@@ -195,8 +221,10 @@ class RMake
   end
 
   def build
+    @env[ENV_INDENT] = 0
     target = @target_map[@target_name]
     target&.build
+    @env.delete(ENV_INDENT)
   end
 
   def list_targets
