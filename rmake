@@ -89,11 +89,22 @@ class Task
   end
 
   def build
-    _echo { puts "#{indent_space} --> #{@cmd}" }
-    system @cmd
+    cmd = _render_cmd
+    _echo { puts "#{indent_space} --> #{cmd}" }
+    system cmd
   end
 
   private
+
+  def _render_cmd
+    cmd = @cmd
+    vars = cmd.scan(/\$\(([^)]*)\)/).flatten
+    vars.each do |var_name|
+      val = @env.fetch(var_name, '')
+      cmd = cmd.sub(/\$\(([^)]*)\)/, val)
+    end
+    cmd
+  end
 
   def _echo
     if @echo.nil?
@@ -291,6 +302,7 @@ class RMake
     vv { pp @target_name }
     vv { pp all_deps }
     vv { pp tasks }
+    vv { pp @env }
   end
 end
 
