@@ -1,0 +1,11 @@
+AllCops:
+  NewCops: enable
+
+Layout/LineLength:
+  Max: 130
+
+Metrics/MethodLength:
+  Max: 45
+
+Style/AsciiComments:
+  Enabled: false
