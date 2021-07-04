@@ -1,20 +1,20 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# TODO(Drogon): Add argparse
+# TODO(Drogon): Refactor with Parser
+
 RMAKEFILE = 'rmakefile'
 ENV_INDENT = '_indent_'
 
+# EnvHelper for some helper function moudle mixin for Env
 module EnvHelper
   def v
-    if _verbose >= 1
-      yield if block_given?
-    end
+    yield if _verbose >= 1 && block_given?
   end
 
   def vv
-    if _verbose >= 2
-      yield if block_given?
-    end
+    yield if _verbose >= 2 && block_given?
   end
 
   def indent_space
@@ -36,6 +36,7 @@ module EnvHelper
   end
 end
 
+# Env for rmake runtime env storage
 class Env
   def initialize(table = {}, parent = nil)
     raise 'table is not Hash' if @table.is_a?(Hash)
@@ -79,6 +80,7 @@ class Env
   end
 end
 
+# impl build task for target
 class Task
   include EnvHelper
 
@@ -116,12 +118,11 @@ class Task
       end
     end
 
-    if @echo
-      yield if block_given?
-    end
+    yield if @echo && block_given?
   end
 end
 
+# Makefile build target
 class Target
   include EnvHelper
 
@@ -184,6 +185,7 @@ end
 
 Token = Struct.new(:type, :data)
 
+# Makefile lexer impl
 class Lexer
   ASSIGNMENT = 1
   DEPENDENCY = 2
@@ -218,6 +220,7 @@ class Lexer
   end
 end
 
+# RMake entrance class
 class RMake
   include EnvHelper
 
