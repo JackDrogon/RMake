@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 # TODO(Drogon): Add argparse
-# TODO(Drogon): Refactor with Parser
 
 RMAKEFILE = 'rmakefile'
 ENV_INDENT = '_indent_'
@@ -93,7 +92,11 @@ class Task
   def build
     cmd = _render_cmd
     _echo { puts "#{indent_space} --> #{cmd}" }
-    system cmd
+    if cmd.strip.start_with? '#'
+      cmd
+    else
+      system cmd
+    end
   end
 
   private
