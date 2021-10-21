@@ -1,0 +1,5 @@
+.PHONY: hello
+
+hello:
+	# hello
+	@echo hello
