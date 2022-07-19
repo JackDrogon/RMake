@@ -49,16 +49,16 @@ class CLI
   def _parse
     @parser.parse
 
-    all_deps = @parser.all_deps
+    all_dependencies = @parser.all_dependencies
     tasks = @parser.tasks
 
     @target_name ||= @parser.first_target
-    all_deps.each do |name, deps|
-      target = Target.new(@env, name, deps, tasks[name], @target_map)
+    all_dependencies.each do |name, dependencies|
+      target = Target.new(@env, name, dependencies, tasks[name], @target_map)
       @target_map[name] = target
     end
     vv { pp @target_name }
-    vv { pp all_deps }
+    vv { pp all_dependencies }
     vv { pp tasks }
     vv { pp @env }
   end

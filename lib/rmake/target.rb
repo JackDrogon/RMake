@@ -4,12 +4,12 @@
 class Target
   include EnvHelper
 
-  attr_reader :name, :deps
+  attr_reader :name, :dependencies
 
-  def initialize(env, name, deps, cmds, target_map)
+  def initialize(env, name, dependencies, cmds, target_map)
     @env = env
     @name = name
-    @deps = deps
+    @dependencies = dependencies
     @tasks = (cmds || []).map { |cmd| Task.new(env, cmd) }
     @target_map = target_map
     @need_rebuild = nil
@@ -25,7 +25,7 @@ class Target
 
     v { puts "#{indent_space}Building target #{@name}" }
 
-    _build_deps
+    build_all_dependencies
     @tasks.each(&:build)
     @need_rebuild = false
   end
@@ -35,14 +35,15 @@ class Target
   def _rebuild?
     return true unless File.exist?(@name)
 
-    @deps.any? do |dep|
+    @dependencies.any? do |dependency|
       # PHONY task
-      return true unless File.exist?(dep)
+      return true unless File.exist?(dependency)
 
-      target = @target_map[dep]
+      target = @target_map[dependency]
+      # check target is newer than dep
       if target.nil?
         # File task
-        File.mtime(@name) < File.mtime(dep)
+        File.mtime(@name) < File.mtime(dependency)
       elsif target.rebuild?
         true
       else
@@ -51,10 +52,10 @@ class Target
     end
   end
 
-  def _build_deps
+  def build_all_dependencies
     indent_monitor do
-      @deps.each do |dep|
-        target = @target_map[dep]
+      @dependencies.each do |dependency|
+        target = @target_map[dependency]
         target&.build
       end
     end

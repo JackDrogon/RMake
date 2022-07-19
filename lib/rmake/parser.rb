@@ -9,13 +9,13 @@ require_relative './task'
 class Parser
   include EnvHelper
 
-  attr_reader :first_target, :all_deps, :tasks
+  attr_reader :first_target, :all_dependencies, :tasks
 
   def initialize(env, lexer)
     @env = env
     @lexer = lexer
     @first_target = nil
-    @all_deps = {}
+    @all_dependencies = {}
     @tasks = {}
   end
 
@@ -36,7 +36,7 @@ class Parser
         target_deps = [] # default for clean: just no deps
         target_deps = rules[1].split.map(&:strip) unless rules.length == 1
 
-        (@all_deps[current_target] ||= []).concat(target_deps)
+        (@all_dependencies[current_target] ||= []).concat(target_deps)
       when Lexer::TASK
         # ["gcc 1.o 2.c -o total"]
         unless current_target
