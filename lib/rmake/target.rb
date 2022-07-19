@@ -52,11 +52,11 @@ class Target
   end
 
   def _build_deps
-    incr_indent
-    @deps.each do |dep|
-      target = @target_map[dep]
-      target&.build
+    indent_monitor do
+      @deps.each do |dep|
+        target = @target_map[dep]
+        target&.build
+      end
     end
-    decr_indent
   end
 end

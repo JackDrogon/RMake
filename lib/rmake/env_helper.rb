@@ -14,11 +14,9 @@ module EnvHelper
     '  ' * @env[ENV_INDENT]
   end
 
-  def incr_indent
+  def indent_monitor
     @env[ENV_INDENT] += 1
-  end
-
-  def decr_indent
+    yield if block_given?
     @env[ENV_INDENT] -= 1
   end
 

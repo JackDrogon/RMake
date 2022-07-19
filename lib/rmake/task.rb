@@ -8,13 +8,14 @@ class Task
 
   def initialize(env, cmd)
     @env = env
-    @cmd = cmd
     @echo = nil
+    @_cmd = cmd
   end
 
   def build
     cmd = _render_cmd
     _echo { puts "#{indent_space} --> #{cmd}" }
+
     if cmd.strip.start_with? '#'
       cmd
     else
@@ -25,7 +26,7 @@ class Task
   private
 
   def _render_cmd
-    cmd = @cmd
+    cmd = @_cmd
     vars = cmd.scan(/\$\(([^)]*)\)/).flatten
     vars.each do |var_name|
       val = @env.fetch(var_name, '')
@@ -38,9 +39,9 @@ class Task
     if @echo.nil?
       # nil run first
       @echo = true
-      if @cmd.start_with?('@')
+      if @_cmd.start_with?('@')
         @echo = false
-        @cmd[0] = ''
+        @_cmd[0] = ''
       end
     end
 
