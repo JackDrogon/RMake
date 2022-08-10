@@ -35,7 +35,7 @@ class CLI
 
   def run
     # TODO: check target not found
-    unless @target_name
+    if not @target_name.nil? and not @target_map.key?(@target_name)
       puts "target #{@target_name} not found"
       exit(1)
     end
