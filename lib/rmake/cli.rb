@@ -11,6 +11,11 @@ require_relative './target'
 class CLI
   include EnvHelper
 
+  # Initializes a new instance of the CLI class.
+  #
+  # @param env [Hash] The environment variables.
+  # @param rmakefile [String] The path to the RMakefile.
+  # @param target_name [String] The name of the target to build.
   def initialize(env, rmakefile, target_name)
     @env = env
     lexer = Lexer.new(env, rmakefile)
@@ -22,6 +27,9 @@ class CLI
     _parse
   end
 
+  # Builds the target specified in the constructor.
+  #
+  # @return [void]
   def build
     @env[ENV_INDENT] = 0
     target = @target_map[@target_name]
@@ -29,10 +37,16 @@ class CLI
     @env.delete(ENV_INDENT)
   end
 
+  # Returns an array of all target names.
+  #
+  # @return [Array<String>] An array of all target names.
   def list_targets
     @target_map.keys
   end
 
+  # Runs the build process for the target specified in the constructor.
+  #
+  # @return [void]
   def run
     # TODO: check target not found
     if not @target_name.nil? and not @target_map.key?(@target_name)
@@ -46,6 +60,9 @@ class CLI
 
   private
 
+  # Parses the RMakefile and creates the target map.
+  #
+  # @return [void]
   def _parse
     @parser.parse
 
