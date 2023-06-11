@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Token struct with type and data attributes
 Token = Struct.new(:type, :data)
 
 # Makefile lexer impl
@@ -15,7 +16,9 @@ class Lexer
     @data = nil # buffer with lines
   end
 
-  # nil is empty
+  # Returns the next token from the input stream
+  # Returns a Token object with type and data attributes
+  # Returns a Token object with type EOF and data nil if there are no more tokens
   def next
     @data = File.readlines(@rmakefile) if @data.nil?
 
