@@ -3,9 +3,8 @@
 
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
+require 'optparse'
 require 'rmake/cli'
-
-# TODO(Drogon): Add argparse
 
 # The default name of the RMakefile
 RMAKEFILE = 'rmakefile'
@@ -15,10 +14,37 @@ ENV_INDENT = '_indent_'
 
 # The main function that runs the CLI and executes the target
 def main
-  target_name = nil
-  target_name = ARGV[0] unless ARGV.empty?
+  options = {:rmakefile => RMAKEFILE, :root_dir => Dir.pwd}
 
-  rmake = CLI.new(Env.new(ENV.to_h), RMAKEFILE, target_name)
+  OptionParser.new do |opts|
+    opts.banner = "Usage: rmake [options]"
+
+    # TODO: add doc, remain arg is target, assert 1
+    
+
+    # opts.on("--target TARGET", "Specify the target to run") do |t|
+    #   options[:target] = t
+    # end
+    
+    # add -C dir options
+    opts.on("-C", "--directory DIR", "Change to DIR before doing anything.") do |dir|
+      options[:_rmake_cur_dir] = dir
+    end
+  end.parse!
+
+  if ARGV.length > 1
+    raise "too many args"
+  end
+
+  options[:target] ||= ARGV[0]
+
+  env = Env.new(ENV.to_h)
+  # env[:root_dir] = options[:dir] if options[:dir]
+  if options[:_rmake_cur_dir]
+    Dir.chdir(options[:_rmake_cur_dir])
+  end
+  rmake = CLI.new(env, options[:rmakefile], options[:target])
+
   puts '================================='
   puts '----- list targets -----'
   puts rmake.list_targets
