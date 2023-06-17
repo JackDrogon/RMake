@@ -11,12 +11,10 @@ require_relative './target'
 class CLI
   include EnvHelper
 
-  # Initializes a new instance of the CLI class.
-  #
-  # @param env [Hash] The environment variables.
-  # @param rmakefile [String] The path to the RMakefile.
-  # @param target_name [String] The name of the target to build.
-  def initialize(env, rmakefile, target_name)
+  def initialize(env, options)
+    rmakefile = options[:rmakefile]
+    target_name = options[:target]
+
     @env = env
     lexer = Lexer.new(env, rmakefile)
     @parser = Parser.new(env, lexer)

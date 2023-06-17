@@ -43,7 +43,7 @@ def main
   if options[:_rmake_cur_dir]
     Dir.chdir(options[:_rmake_cur_dir])
   end
-  rmake = CLI.new(env, options[:rmakefile], options[:target])
+  rmake = CLI.new(env, options)
 
   puts '================================='
   puts '----- list targets -----'
