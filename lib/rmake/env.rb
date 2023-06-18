@@ -40,12 +40,20 @@ class Env
   end
 
   # Deletes the given key from the environment.
+  # 
+  # if the key is present in the table, only delete it from the table.
+  # otherwise, delete it from the parent.
   #
   # @param key [Object] The key to delete.
   # @return [Object, nil] Returns the value of the deleted key if present in the environment, otherwise nil.
   def delete(key)
-    @table.delete(key)
-    @parent&.delete(key)
+    value = @table.delete(key)
+
+    if value
+      value
+    else
+      @parent&.delete(key)
+    end
   end
 
   # Gets the value of the given key from the environment.
