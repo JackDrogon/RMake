@@ -1,0 +1,4 @@
+{
+    "rubyTestExplorer.testFramework": "minitest",
+    "rubyTestExplorer.minitestCommand": "rake"
+}
