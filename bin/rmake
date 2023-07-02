@@ -30,6 +30,11 @@ def main
     opts.on("-C", "--directory DIR", "Change to DIR before doing anything.") do |dir|
       options[:_rmake_cur_dir] = dir
     end
+
+    # add list target options
+    opts.on("-l", "--list", "List all targets") do |l|
+      options[:list] = l
+    end
   end.parse!
 
   if ARGV.length > 1
@@ -45,12 +50,14 @@ def main
   end
   rmake = CLI.new(env, options)
 
-  puts '================================='
-  puts '----- list targets -----'
-  puts rmake.list_targets
-  puts '================================='
-
-  rmake.run
+  if options[:list]
+    puts '================================='
+    puts '----- list targets -----'
+    puts rmake.list_targets
+    puts '================================='
+  else
+    rmake.run
+  end
 end
 
 # Call the main function if the last read line is not the current file
