@@ -19,27 +19,30 @@ class CLI
   # @option options [String] :target The name of the target to build.
   # @return [void]
   def initialize(env, options)
-    rmakefile = options[:rmakefile]
-    target_name = options[:target]
-
+    @options = options
     @env = env
+    rmakefile = options[:rmakefile]
     lexer = Lexer.new(env, rmakefile)
     @parser = Parser.new(env, lexer)
 
-    @target_name = target_name
+    @target_name = options[:target]
     @target_map = {}
 
     _parse
   end
 
-  # Builds the target specified in the constructor.
-  #
-  # @return [void]
+  # Builds the target specified by @target_name instance variable.
+  # If @target_name is not found in @target_map, it prints an error message and exits with status code 1.
+  # Otherwise, it calls build_target method to build the target.
   def build
-    @env[ENV_INDENT] = 0
-    target = @target_map[@target_name]
-    target&.build
-    @env.delete(ENV_INDENT)
+    # TODO: check target not found
+    if not @target_name.nil? and not @target_map.key?(@target_name)
+      puts "target #{@target_name} not found"
+      exit(1)
+    end
+
+    v { puts '-------------------------' }
+    _build_target
   end
 
   # Returns an array of all target names.
@@ -49,18 +52,18 @@ class CLI
     @target_map.keys
   end
 
-  # Runs the build process for the target specified in the constructor.
+  # Runs the CLI command. If the `list` option is set to true, it lists all available targets. Otherwise, it builds the target specified in the command line arguments.
   #
-  # @return [void]
+  # Returns nothing.
   def run
-    # TODO: check target not found
-    if not @target_name.nil? and not @target_map.key?(@target_name)
-      puts "target #{@target_name} not found"
-      exit(1)
+    if @options[:list]
+      puts '================================='
+      puts '----- list targets -----'
+      puts list_targets
+      puts '================================='
+    else
+      build
     end
-
-    v { puts '-------------------------' }
-    build
   end
 
   private
@@ -83,5 +86,16 @@ class CLI
     vv { pp all_dependencies }
     vv { pp tasks }
     vv { pp @env }
+  end
+
+  # Builds the target specified by @target_name, if it exists in @target_map.
+  # Sets the ENV_INDENT environment variable to 0 before building the target.
+  # Deletes the ENV_INDENT environment variable after building the target.
+  # Returns nothing.
+  def _build_target
+    @env[ENV_INDENT] = 0
+    target = @target_map[@target_name]
+    target&.build
+    @env.delete(ENV_INDENT)
   end
 end
